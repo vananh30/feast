@@ -76,14 +76,20 @@ class SparkKafkaProcessor(StreamProcessor):
                 self.data_source.kafka_options.message_format, JsonFormat
             ):
                 raise ValueError("kafka source message format is not jsonformat")
+
             stream_df = (
                 self.spark.readStream.format("kafka")
-                .option(
-                    "kafka.bootstrap.servers",
-                    self.data_source.kafka_options.kafka_bootstrap_servers,
-                )
+                .option("kafka.bootstrap.servers", self.data_source.kafka_options.kafka_bootstrap_servers)
+                .option("kafka.security.protocol", self.data_source.kafka_options.kafka_security_protocol)
+                .option("kafka.ssl.check.hostname", self.data_source.kafka_options.kafka_ssl_check_hostname)
+                .option("kafka.ssl.ca.location", self.data_source.kafka_options.kafka_ssl_ca_location)
+                .option("kafka.sasl.mechanism", self.data_source.kafka_options.kafka_sasl_mechanism)
+                .option("startingOffsets", self.data_source.kafka_options.starting_offsets)
+                .option("maxOffsetsPerTrigger", self.data_source.kafka_options.max_offsets_per_trigger)
+                .option("kafka.sasl.jaas.config", self.data_source.kafka_options.kafka_sasl_config)
+                .option("kafka.sasl.username", self.data_source.kafka_options.kafka_sasl_username)
+                .option("kafka.sasl.password", self.data_source.kafka_options.kafka_sasl_password)
                 .option("subscribe", self.data_source.kafka_options.topic)
-                .option("startingOffsets", "latest")  # Query start
                 .load()
                 .selectExpr("CAST(value AS STRING)")
                 .select(
@@ -101,12 +107,17 @@ class SparkKafkaProcessor(StreamProcessor):
                 raise ValueError("kafka source message format is not avro format")
             stream_df = (
                 self.spark.readStream.format("kafka")
-                .option(
-                    "kafka.bootstrap.servers",
-                    self.data_source.kafka_options.kafka_bootstrap_servers,
-                )
+                .option("kafka.bootstrap.servers", self.data_source.kafka_options.kafka_bootstrap_servers)
+                .option("kafka.security.protocol", self.data_source.kafka_options.kafka_security_protocol)
+                .option("kafka.ssl.check.hostname", self.data_source.kafka_options.kafka_ssl_check_hostname)
+                .option("kafka.ssl.ca.location", self.data_source.kafka_options.kafka_ssl_ca_location)
+                .option("kafka.sasl.mechanism", self.data_source.kafka_options.kafka_sasl_mechanism)
+                .option("startingOffsets", self.data_source.kafka_options.starting_offsets)
+                .option("maxOffsetsPerTrigger", self.data_source.kafka_options.max_offsets_per_trigger)
+                .option("kafka.sasl.jaas.config", self.data_source.kafka_options.kafka_sasl_config)
+                .option("kafka.sasl.username", self.data_source.kafka_options.kafka_sasl_username)
+                .option("kafka.sasl.password", self.data_source.kafka_options.kafka_sasl_password)
                 .option("subscribe", self.data_source.kafka_options.topic)
-                .option("startingOffsets", "latest")  # Query start
                 .load()
                 .selectExpr("CAST(value AS STRING)")
                 .select(
