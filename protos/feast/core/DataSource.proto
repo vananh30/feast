@@ -135,7 +135,6 @@ message DataSource {
   // Each message should be a Protobuf that can be decoded with the generated
   // Java Protobuf class at the given class path
   message KafkaOptions {
-    message KafkaOptions {
     // Using an enum to represent StreamFormat
     StreamFormat message_format = 1;
     string topic = 2;
@@ -150,8 +149,6 @@ message DataSource {
     string kafka_sasl_username = 11;
     string kafka_sasl_password = 12;
     google.protobuf.Duration watermark_delay_threshold = 13;
-  }
-
   }
 
   // Defines options for DataSource that sources features from Kinesis records.
