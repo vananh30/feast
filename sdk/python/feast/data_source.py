@@ -31,6 +31,7 @@ from feast.types import from_value_type
 from feast.value_type import ValueType
 
 
+
 class KafkaOptions:
     """
     DataSource Kafka options used to source features from Kafka messages
@@ -38,14 +39,32 @@ class KafkaOptions:
 
     def __init__(
         self,
-        kafka_bootstrap_servers: str,
         message_format: StreamFormat,
         topic: str,
+        kafka_bootstrap_servers: str,
+        kafka_security_protocol: str,
+        kafka_ssl_check_hostname: bool,
+        kafka_ssl_ca_location: str,
+        kafka_sasl_mechanism: str,
+        starting_offsets: str,
+        max_offsets_per_trigger: str,
+        kafka_sasl_config: str,
+        kafka_sasl_username: str,
+        kafka_sasl_password: str,
         watermark_delay_threshold: Optional[timedelta] = None,
     ):
-        self.kafka_bootstrap_servers = kafka_bootstrap_servers
         self.message_format = message_format
-        self.topic = topic
+        self.topic = topic 
+        self.kafka_bootstrap_servers = kafka_bootstrap_servers
+        self.kafka_security_protocol = kafka_security_protocol 
+        self.kafka_ssl_check_hostname = kafka_ssl_check_hostname 
+        self.kafka_ssl_ca_location = kafka_ssl_ca_location 
+        self.kafka_sasl_mechanism = kafka_sasl_mechanism 
+        self.starting_offsets = starting_offsets 
+        self.max_offsets_per_trigger = max_offsets_per_trigger 
+        self.kafka_sasl_config = kafka_sasl_config 
+        self.kafka_sasl_username = kafka_sasl_username 
+        self.kafka_sasl_password = kafka_sasl_password
         self.watermark_delay_threshold = watermark_delay_threshold or None
 
     @classmethod
@@ -68,6 +87,15 @@ class KafkaOptions:
             )
         kafka_options = cls(
             kafka_bootstrap_servers=kafka_options_proto.kafka_bootstrap_servers,
+            kafka_security_protocol=kafka_options_proto.kafka_security_protocol,
+            kafka_ssl_check_hostname=kafka_options_proto.kafka_ssl_check_hostname,
+            kafka_ssl_ca_location=kafka_options_proto.kafka_ssl_ca_location,
+            kafka_sasl_mechanism=kafka_options_proto.kafka_sasl_mechanism,
+            starting_offsets=kafka_options_proto.starting_offsets,
+            max_offsets_per_trigger=kafka_options_proto.max_offsets_per_trigger,
+            kafka_sasl_config=kafka_options_proto.kafka_sasl_config,
+            kafka_sasl_username=kafka_options_proto.kafka_sasl_username,
+            kafka_sasl_password=kafka_options_proto.kafka_sasl_password,
             message_format=StreamFormat.from_proto(kafka_options_proto.message_format),
             topic=kafka_options_proto.topic,
             watermark_delay_threshold=watermark_delay_threshold,
@@ -89,13 +117,21 @@ class KafkaOptions:
 
         kafka_options_proto = DataSourceProto.KafkaOptions(
             kafka_bootstrap_servers=self.kafka_bootstrap_servers,
+            kafka_security_protocol=self.kafka_security_protocol,
+            kafka_ssl_check_hostname=self.kafka_ssl_check_hostname,
+            kafka_ssl_ca_location=self.kafka_ssl_ca_location,
+            kafka_sasl_mechanism=self.kafka_sasl_mechanism,
+            starting_offsets=self.starting_offsets,
+            max_offsets_per_trigger=self.max_offsets_per_trigger,
+            kafka_sasl_config=self.kafka_sasl_config,
+            kafka_sasl_username=self.kafka_sasl_username,
+            kafka_sasl_password=self.kafka_sasl_password,
             message_format=self.message_format.to_proto(),
             topic=self.topic,
             watermark_delay_threshold=watermark_delay_threshold,
         )
 
         return kafka_options_proto
-
 
 class KinesisOptions:
     """
@@ -341,7 +377,6 @@ class DataSource(ABC):
         """
         raise NotImplementedError
 
-
 @typechecked
 class KafkaSource(DataSource):
     def __init__(
@@ -350,9 +385,17 @@ class KafkaSource(DataSource):
         name: str,
         timestamp_field: str,
         message_format: StreamFormat,
-        bootstrap_servers: Optional[str] = None,
-        kafka_bootstrap_servers: Optional[str] = None,
-        topic: Optional[str] = None,
+        kafka_bootstrap_servers: str,
+        kafka_security_protocol: str,
+        kafka_ssl_check_hostname: bool,
+        kafka_ssl_ca_location: str,
+        kafka_sasl_mechanism: str,
+        starting_offsets: str,
+        max_offsets_per_trigger: str,
+        kafka_sasl_config: str,
+        kafka_sasl_username: str,
+        kafka_sasl_password: str,
+        kafka_topic: str,
         created_timestamp_column: Optional[str] = "",
         field_mapping: Optional[Dict[str, str]] = None,
         description: Optional[str] = "",
@@ -368,9 +411,17 @@ class KafkaSource(DataSource):
             name: Name of data source, which should be unique within a project
             timestamp_field: Event timestamp field used for point-in-time joins of feature values.
             message_format: StreamFormat of serialized messages.
-            bootstrap_servers: (Deprecated) The servers of the kafka broker in the form "localhost:9092".
-            kafka_bootstrap_servers (optional): The servers of the kafka broker in the form "localhost:9092".
-            topic (optional): The name of the topic to read from in the kafka source.
+            kafka_bootstrap_servers: The servers of the kafka broker in the form "localhost:9092".
+            kafka_security_protocol: The security protocol for Kafka.
+            kafka_ssl_check_hostname: Boolean to check SSL hostname.
+            kafka_ssl_ca_location: Location of the CA certificate.
+            kafka_sasl_mechanism: The SASL mechanism for Kafka.
+            starting_offsets: The starting offsets for Kafka.
+            max_offsets_per_trigger: The maximum offsets per trigger for Kafka.
+            kafka_sasl_config: The SASL configuration for Kafka.
+            kafka_sasl_username: The SASL username for Kafka.
+            kafka_sasl_password: The SASL password for Kafka.
+            kafka_topic: The name of the topic to read from in the kafka source.
             created_timestamp_column (optional): Timestamp column indicating when the row
                 was created, used for deduplicating rows.
             field_mapping (optional): A dictionary mapping of column names in this data
@@ -384,14 +435,6 @@ class KafkaSource(DataSource):
             watermark_delay_threshold (optional): The watermark delay threshold for stream data.
                 Specifically how late stream data can arrive without being discarded.
         """
-        if bootstrap_servers:
-            warnings.warn(
-                (
-                    "The 'bootstrap_servers' parameter has been deprecated in favor of 'kafka_bootstrap_servers'. "
-                    "Feast 0.25 and onwards will not support the 'bootstrap_servers' parameter."
-                ),
-                DeprecationWarning,
-            )
 
         super().__init__(
             name=name,
@@ -404,13 +447,19 @@ class KafkaSource(DataSource):
         )
         self.batch_source = batch_source
 
-        kafka_bootstrap_servers = kafka_bootstrap_servers or bootstrap_servers or ""
-        topic = topic or ""
-
         self.kafka_options = KafkaOptions(
             kafka_bootstrap_servers=kafka_bootstrap_servers,
+            kafka_security_protocol=kafka_security_protocol,
+            kafka_ssl_check_hostname=kafka_ssl_check_hostname,
+            kafka_ssl_ca_location=kafka_ssl_ca_location,
+            kafka_sasl_mechanism=kafka_sasl_mechanism,
+            starting_offsets=starting_offsets,
+            max_offsets_per_trigger=max_offsets_per_trigger,
+            kafka_sasl_config=kafka_sasl_config,
+            kafka_sasl_username=kafka_sasl_username,
+            kafka_sasl_password=kafka_sasl_password,
             message_format=message_format,
-            topic=topic,
+            topic=kafka_topic,
             watermark_delay_threshold=watermark_delay_threshold,
         )
 
@@ -426,6 +475,24 @@ class KafkaSource(DataSource):
         if (
             self.kafka_options.kafka_bootstrap_servers
             != other.kafka_options.kafka_bootstrap_servers
+            or self.kafka_options.kafka_security_protocol
+            != other.kafka_options.kafka_security_protocol
+            or self.kafka_options.kafka_ssl_check_hostname
+            != other.kafka_options.kafka_ssl_check_hostname
+            or self.kafka_options.kafka_ssl_ca_location
+            != other.kafka_options.kafka_ssl_ca_location
+            or self.kafka_options.kafka_sasl_mechanism
+            != other.kafka_options.kafka_sasl_mechanism
+            or self.kafka_options.starting_offsets
+            != other.kafka_options.starting_offsets
+            or self.kafka_options.max_offsets_per_trigger
+            != other.kafka_options.max_offsets_per_trigger
+            or self.kafka_options.kafka_sasl_config
+            != other.kafka_options.kafka_sasl_config
+            or self.kafka_options.kafka_sasl_username
+            != other.kafka_options.kafka_sasl_username
+            or self.kafka_options.kafka_sasl_password
+            != other.kafka_options.kafka_sasl_password
             or self.kafka_options.message_format != other.kafka_options.message_format
             or self.kafka_options.topic != other.kafka_options.topic
             or self.kafka_options.watermark_delay_threshold
@@ -452,6 +519,15 @@ class KafkaSource(DataSource):
             name=data_source.name,
             field_mapping=dict(data_source.field_mapping),
             kafka_bootstrap_servers=data_source.kafka_options.kafka_bootstrap_servers,
+            kafka_security_protocol=data_source.kafka_options.kafka_security_protocol,
+            kafka_ssl_check_hostname=data_source.kafka_options.kafka_ssl_check_hostname,
+            kafka_ssl_ca_location=data_source.kafka_options.kafka_ssl_ca_location,
+            kafka_sasl_mechanism=data_source.kafka_options.kafka_sasl_mechanism,
+            starting_offsets=data_source.kafka_options.starting_offsets,
+            max_offsets_per_trigger=data_source.kafka_options.max_offsets_per_trigger,
+            kafka_sasl_config=data_source.kafka_options.kafka_sasl_config,
+            kafka_sasl_username=data_source.kafka_options.kafka_sasl_username,
+            kafka_sasl_password=data_source.kafka_options.kafka_sasl_password,
             message_format=StreamFormat.from_proto(
                 data_source.kafka_options.message_format
             ),
