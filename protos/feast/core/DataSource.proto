@@ -135,17 +135,23 @@ message DataSource {
   // Each message should be a Protobuf that can be decoded with the generated
   // Java Protobuf class at the given class path
   message KafkaOptions {
-    // Comma separated list of Kafka bootstrap servers. Used for feature tables without a defined source host[:port]]
-    string kafka_bootstrap_servers = 1;
-
-    // Kafka topic to collect feature data from.
+    message KafkaOptions {
+    // Using an enum to represent StreamFormat
+    StreamFormat message_format = 1;
     string topic = 2;
+    string kafka_bootstrap_servers = 3;
+    string kafka_security_protocol = 4;
+    bool kafka_ssl_check_hostname = 5;
+    string kafka_ssl_ca_location = 6;
+    string kafka_sasl_mechanism = 7;
+    string starting_offsets = 8;
+    string max_offsets_per_trigger = 9;
+    string kafka_sasl_config = 10;
+    string kafka_sasl_username = 11;
+    string kafka_sasl_password = 12;
+    google.protobuf.Duration watermark_delay_threshold = 13;
+  }
 
-    // Defines the stream data format encoding feature/entity data in Kafka messages.
-    StreamFormat message_format = 3;
-
-    // Watermark delay threshold for stream data
-    google.protobuf.Duration watermark_delay_threshold = 4;
   }
 
   // Defines options for DataSource that sources features from Kinesis records.
