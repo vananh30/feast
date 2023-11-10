@@ -395,7 +395,7 @@ class KafkaSource(DataSource):
         kafka_sasl_config: str,
         kafka_sasl_username: str,
         kafka_sasl_password: str,
-        kafka_topic: str,
+        topic: str,
         created_timestamp_column: Optional[str] = "",
         field_mapping: Optional[Dict[str, str]] = None,
         description: Optional[str] = "",
@@ -459,7 +459,7 @@ class KafkaSource(DataSource):
             kafka_sasl_username=kafka_sasl_username,
             kafka_sasl_password=kafka_sasl_password,
             message_format=message_format,
-            topic=kafka_topic,
+            topic=topic,
             watermark_delay_threshold=watermark_delay_threshold,
         )
 
