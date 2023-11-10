@@ -144,6 +144,9 @@ class CassandraOnlineStoreConfig(FeastConfigBaseModel):
 
     request_timeout: Optional[StrictFloat] = None
     """Request timeout in seconds."""
+    
+    ssl_certifile: Optional[StrictStr] = None
+    """test ssl"""
 
     class CassandraLoadBalancingPolicy(FeastConfigBaseModel):
         """
@@ -224,6 +227,7 @@ class CassandraOnlineStore(OnlineStore):
             username = online_store_config.username
             password = online_store_config.password
             protocol_version = online_store_config.protocol_version
+            ssl_certifile = online_store_config.ssl_certifile
 
             db_directions = hosts or secure_bundle_path
             if not db_directions or not keyspace:
@@ -274,6 +278,7 @@ class CassandraOnlineStore(OnlineStore):
                 for k, v in {
                     "protocol_version": protocol_version,
                     "execution_profiles": execution_profiles,
+                    "ssl_options":{"ca_certs":ssl_certifile}
                 }.items()
                 if v is not None
             }
